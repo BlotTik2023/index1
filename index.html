@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Коллекционные карточки</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:disabled {
+            background-color: #cccccc !important;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            position: relative;
+            perspective: 1000px;
+            width: 300px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            width: 300px;
+            height: 400px;
+            border-radius: 15px;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            backface-visibility: hidden;
+            margin: 0 auto;
+        }
+        
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .card-front {
+            background-color: #333;
+            transform: rotateY(0deg);
+        }
+        
+        .card-back {
+            background-color: inherit;
+            transform: rotateY(180deg);
+        }
+        
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card-name {
+            font-size: 48px;
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+        
+        .card-rarity {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .card-chance {
+            font-size: 16px;
+        }
+        
+        .card-reward {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            font-size: 20px;
+        }
+        
+        .collection-container {
+            max-width: 900px;
+            margin: 30px auto 0;
+            overflow-x: auto;
+        }
+        
+        .collection {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .collection-card {
+            width: 150px;
+            height: 200px;
+            border-radius: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 1px black;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            transition: transform 0.3s;
+            position: relative;
+        }
+        
+        .collection-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .collection-card .card-name {
+            font-size: 36px;
+            margin-bottom: 5px;
+            font-weight: 900;
+        }
+        
+        .collection-card .card-rarity {
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+        
+        .collection-card .card-chance {
+            font-size: 12px;
+        }
+        
+        .collection-card .card-reward {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 16px;
+        }
+        
+        .cooldown {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 10;
+        }
+        
+        .reset-btn {
+            background-color: #f44336;
+        }
+        
+        .reset-btn:hover {
+            background-color: #d32f2f;
+        }
+        
+        .normal-pack {
+            background-color: #4CAF50;
+        }
+        
+        .normal-pack:hover {
+            background-color: #45a049;
+        }
+        
+        .rare-pack {
+            background-color: #2196F3;
+        }
+        
+        .rare-pack:hover {
+            background-color: #0b7dda;
+        }
+        
+        .epic-pack {
+            background-color: #9C27B0;
+        }
+        
+        .epic-pack:hover {
+            background-color: #7B1FA2;
+        }
+        
+        .legendary-pack {
+            background-color: #FF9800;
+        }
+        
+        .legendary-pack:hover {
+            background-color: #F57C00;
+        }
+        
+        .rarity-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 5px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Стиль для счётчика денег */
+        .money-counter {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .money-counter::before {
+            content: "$";
+            margin-right: 5px;
+            font-size: 20px;
+        }
+        
+        /* Стиль для уведомления о получении денег */
+        .money-notification {
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            background-color: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .pack-info {
+            font-size: 12px;
+            margin-top: 5px;
+            font-weight: normal;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Стили для мутированных карточек */
+        .mutated {
+            animation: colorChange 3s infinite;
+        }
+        
+        .mutated-badge {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background-color: #FF00FF;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            z-index: 1;
+        }
+        
+        @keyframes colorChange {
+            0% { background-color: #FF0000; }
+            14% { background-color: #FF7F00; }
+            28% { background-color: #FFFF00; }
+            42% { background-color: #00FF00; }
+            56% { background-color: #0000FF; }
+            70% { background-color: #4B0082; }
+            84% { background-color: #9400D3; }
+            100% { background-color: #FF0000; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Счётчик денег в левом верхнем углу -->
+    <div id="moneyCounter" class="money-counter">10</div>
+    <div id="moneyNotification" class="money-notification"></div>
+    
+    <h1>Коллекционные карточки</h1>
+    <div class="button-container">
+        <button id="buyPack" class="normal-pack">
+            Обычный пак (1$)
+            <div class="pack-info">Все карты, стандартные шансы</div>
+        </button>
+        <button id="buyRarePack" class="rare-pack">
+            Редкий пак (10$)
+            <div class="pack-info">Шанс на редкие ×1.5, без H и F</div>
+        </button>
+        <button id="buyEpicPack" class="epic-pack">
+            Эпический пак (20$)
+            <div class="pack-info">Шанс ×3, без H, F, E</div>
+        </button>
+        <button id="buyLegendaryPack" class="legendary-pack">
+            Легендарный пак (50$)
+            <div class="pack-info">Шанс ×7, без H-F-D</div>
+        </button>
+        <button id="resetCollection" class="reset-btn">Сбросить коллекцию</button>
+    </div>
+    <div id="cooldown" class="cooldown" style="display: none;"></div>
+    
+    <div class="rarity-info">
+        <h3>Шансы выпадения (от самых частых к самым редким):</h3>
+        <div id="rarityChances"></div>
+    </div>
+    
+    <div id="cardModal" class="modal">
+        <div class="modal-content">
+            <div id="newCard" class="card">
+                <div class="card-front">Открываем карту...</div>
+                <div class="card-back">
+                    <div class="card-name"></div>
+                    <div class="card-rarity"></div>
+                    <div class="card-chance"></div>
+                    <div class="card-reward"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <h2>Ваша коллекция</h2>
+    <div class="collection-container">
+        <div id="collection" class="collection"></div>
+    </div>
+    
+    <script>
+        // Правильный порядок карточек от H (самой частой) до SSS (самой редкой)
+        const cardTypes = [
+            { name: "H", rarity: "Базовый", color: "#AAAAAA", weight: 16384, reward: 1 },
+            { name: "F", rarity: "Обычный", color: "#777777", weight: 4096, reward: 2 },
+            { name: "E", rarity: "Необычный", color: "#5555FF", weight: 1024, reward: 3 },
+            { name: "D", rarity: "Редкий", color: "#AA00AA", weight: 256, reward: 5 },
+            { name: "C", rarity: "Эпический", color: "#FFAA00", weight: 64, reward: 10 },
+            { name: "B", rarity: "Легендарный", color: "#FF5555", weight: 16, reward: 20 },
+            { name: "A", rarity: "Мифический", color: "#FF0000", weight: 4, reward: 50 },
+            { name: "A+", rarity: "Божественный", color: "#FF00FF", weight: 1, reward: 100 },
+            { name: "S+", rarity: "Трансцендентный", color: "#00FFFF", weight: 0.25, reward: 200 },
+            { name: "S++", rarity: "Вечный", color: "#FFFF00", weight: 0.0625, reward: 500 },
+            { name: "S+++", rarity: "Абсолютный", color: "#00FF00", weight: 0.015625, reward: 1000 },
+            { name: "S", rarity: "Превосходный", color: "#FF8800", weight: 0.00390625, reward: 2000 },
+            { name: "SS+", rarity: "Сверхъестественный", color: "#8800FF", weight: 0.0009765625, reward: 5000 },
+            { name: "SSS", rarity: "Вселенский", color: "#FF0088", weight: 0.000244140625, reward: 10000 }
+        ];
+
+        // Рассчитываем общий вес для вероятностей
+        const totalWeight = cardTypes.reduce((sum, card) => sum + card.weight, 0);
+        
+        // Обновляем шансы в соответствии с весом
+        cardTypes.forEach(card => {
+            const chance = totalWeight / card.weight;
+            card.chance = `1 к ${Math.round(chance)}`;
+        });
+
+        // Элементы DOM
+        const buyPackBtn = document.getElementById('buyPack');
+        const buyRarePackBtn = document.getElementById('buyRarePack');
+        const buyEpicPackBtn = document.getElementById('buyEpicPack');
+        const buyLegendaryPackBtn = document.getElementById('buyLegendaryPack');
+        const resetBtn = document.getElementById('resetCollection');
+        const cardModal = document.getElementById('cardModal');
+        const newCard = document.getElementById('newCard');
+        const collection = document.getElementById('collection');
+        const cooldownElement = document.getElementById('cooldown');
+        const rarityChancesElement = document.getElementById('rarityChances');
+        const moneyCounter = document.getElementById('moneyCounter');
+        const moneyNotification = document.getElementById('moneyNotification');
+        
+        // Показываем шансы выпадения
+        rarityChancesElement.innerHTML = cardTypes.map(card => 
+            `<div><strong>${card.name}</strong> (${card.rarity}): ${card.chance}</div>`
+        ).join('');
+        
+        // Коллекция пользователя
+        let userCollection = loadCollection();
+        let isCooldown = false;
+        const COOLDOWN_TIME = 3000; // 3 секунды кулдауна
+        
+        // Деньги пользователя
+        let money = loadMoney();
+        updateMoneyCounter();
+        
+        // Загрузка коллекции при старте
+        updateCollection();
+        
+        // Функция для открытия пака с разными параметрами
+        function openPack(packType) {
+            if (isCooldown) return;
+            
+            const packSettings = {
+                normal: { cost: 1, multiplier: 1, exclude: [] },
+                rare: { cost: 10, multiplier: 1.5, exclude: ["H", "F"] },
+                epic: { cost: 20, multiplier: 3, exclude: ["H", "F", "E"] },
+                legendary: { cost: 50, multiplier: 7, exclude: ["H", "F", "D"] }
+            };
+            
+            const { cost, multiplier, exclude } = packSettings[packType];
+            
+            // Проверяем, есть ли деньги
+            if (money < cost) {
+                alert(`У вас недостаточно денег! Нужно ${cost}$ для открытия этого пака.`);
+                return;
+            }
+            
+            // Снимаем деньги за открытие
+            money -= cost;
+            saveMoney();
+            updateMoneyCounter();
+            
+            // Активируем кулдаун
+            startCooldown();
+            
+            // Показываем модальное окно с карточкой рубашкой вверх
+            newCard.classList.remove('flipped');
+            cardModal.style.display = 'flex';
+            
+            // Через небольшую задержку выбираем карточку
+            setTimeout(() => {
+                // Создаем копию массива карточек с измененными параметрами
+                const cardsForSelection = cardTypes
+                    .filter(card => !exclude.includes(card.name))
+                    .map(card => {
+                        // Увеличиваем вес карт в multiplier раз для редких и выше
+                        const rareIndex = cardTypes.findIndex(c => c.rarity === "Редкий");
+                        const currentIndex = cardTypes.findIndex(c => c.name === card.name);
+                        const isRareOrBetter = currentIndex >= rareIndex;
+                        
+                        return {
+                            ...card,
+                            weight: isRareOrBetter ? card.weight * multiplier : card.weight
+                        };
+                    });
+                
+                // Рассчитываем общий вес для выбора
+                const selectionTotalWeight = cardsForSelection.reduce((sum, card) => sum + card.weight, 0);
+                
+                // Выбираем карточку с учетом весов
+                const randomValue = Math.random() * selectionTotalWeight;
+                let cumulativeWeight = 0;
+                let selectedCard = null;
+                
+                for (const card of cardsForSelection) {
+                    cumulativeWeight += card.weight;
+                    if (randomValue <= cumulativeWeight) {
+                        selectedCard = card;
+                        break;
+                    }
+                }
+                
+                // Проверяем мутацию (1% шанс)
+                const isMutated = Math.random() < 0.01;
+                
+                // Создаем копию карточки с уникальным ID
+                const card = {
+                    ...selectedCard, 
+                    id: Date.now(),
+                    mutated: isMutated,
+                    // Для мутированных карточек увеличиваем награду в 2 раза
+                    reward: isMutated ? selectedCard.reward * 2 : selectedCard.reward
+                };
+                
+                // Устанавливаем данные карточки
+                const cardBack = newCard.querySelector('.card-back');
+                cardBack.style.backgroundColor = card.color;
+                cardBack.querySelector('.card-name').textContent = card.name;
+                cardBack.querySelector('.card-rarity').textContent = card.rarity + (card.mutated ? " (Мутация)" : "");
+                cardBack.querySelector('.card-chance').textContent = card.chance;
+                cardBack.querySelector('.card-reward').textContent = card.reward + "$";
+                
+                // Добавляем класс мутации, если карточка мутировала
+                if (card.mutated) {
+                    cardBack.classList.add('mutated');
+                } else {
+                    cardBack.classList.remove('mutated');
+                }
+                
+                // Анимируем переворот карточки
+                setTimeout(() => {
+                    newCard.classList.add('flipped');
+                }, 500);
+                
+                // Добавляем карточку в коллекцию
+                userCollection.push(card);
+                saveCollection();
+                updateCollection();
+                
+                // Добавляем деньги за карточку
+                money += card.reward;
+                saveMoney();
+                updateMoneyCounter();
+                
+                // Показываем уведомление о получении денег
+                showMoneyNotification(`+${card.reward}$`);
+                
+                // Если карточка мутировала, показываем специальное сообщение
+                if (card.mutated) {
+                    setTimeout(() => {
+                        alert("🔥 УНИКАЛЬНАЯ МУТАЦИЯ! 🔥\nВы получили редкую мутировавшую карточку с удвоенной наградой!");
+                    }, 1000);
+                }
+                
+            }, 500);
+        }
+        
+        // Покупка обычного пака
+        buyPackBtn.addEventListener('click', () => openPack('normal'));
+        
+        // Покупка редкого пака
+        buyRarePackBtn.addEventListener('click', () => openPack('rare'));
+        
+        // Покупка эпического пака
+        buyEpicPackBtn.addEventListener('click', () => openPack('epic'));
+        
+        // Покупка легендарного пака
+        buyLegendaryPackBtn.addEventListener('click', () => openPack('legendary'));
+        
+        // Сброс коллекции
+        resetBtn.addEventListener('click', function() {
+            if (confirm("Вы уверены, что хотите сбросить всю коллекцию?")) {
+                userCollection = [];
+                saveCollection();
+                updateCollection();
+                
+                // Сброс денег
+                money = 10;
+                saveMoney();
+                updateMoneyCounter();
+            }
+        });
+        
+        // Кулдаун на открытие карточек
+        function startCooldown() {
+            isCooldown = true;
+            buyPackBtn.disabled = true;
+            buyRarePackBtn.disabled = true;
+            buyEpicPackBtn.disabled = true;
+            buyLegendaryPackBtn.disabled = true;
+            let timeLeft = COOLDOWN_TIME / 1000;
+            
+            cooldownElement.style.display = 'block';
+            cooldownElement.textContent = `Подождите ${timeLeft} сек`;
+            
+            const interval = setInterval(() => {
+                timeLeft--;
+                cooldownElement.textContent = `Подождите ${timeLeft} сек`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    isCooldown = false;
+                    buyPackBtn.disabled = false;
+                    buyRarePackBtn.disabled = false;
+                    buyEpicPackBtn.disabled = false;
+                    buyLegendaryPackBtn.disabled = false;
+                    cooldownElement.style.display = 'none';
+                }
+            }, 1000);
+        }
+        
+        // Сохранение коллекции
+        function saveCollection() {
+            localStorage.setItem('cardCollection', JSON.stringify(userCollection));
+        }
+        
+        // Загрузка коллекции
+        function loadCollection() {
+            const savedCollection = localStorage.getItem('cardCollection');
+            return savedCollection ? JSON.parse(savedCollection) : [];
+        }
+        
+        // Сохранение денег
+        function saveMoney() {
+            localStorage.setItem('userMoney', money.toString());
+        }
+        
+        // Загрузка денег
+        function loadMoney() {
+            const savedMoney = localStorage.getItem('userMoney');
+            return savedMoney ? parseInt(savedMoney) : 10; // Начальное количество денег - 10$
+        }
+        
+        // Обновление счётчика денег
+        function updateMoneyCounter() {
+            moneyCounter.textContent = money;
+        }
+        
+        // Показ уведомления о получении денег
+        function showMoneyNotification(amount) {
+            moneyNotification.textContent = amount;
+            moneyNotification.style.opacity = '1';
+            
+            setTimeout(() => {
+                moneyNotification.style.opacity = '0';
+            }, 2000);
+        }
+        
+        // Закрытие модального окна при клике на затемненную область
+        cardModal.addEventListener('click', function(e) {
+            if (e.target === cardModal && newCard.classList.contains('flipped')) {
+                cardModal.style.display = 'none';
+            }
+        });
+        
+        // Обновление отображения коллекции
+        function updateCollection() {
+            collection.innerHTML = '';
+            
+            // Сортируем коллекцию от лучших (SSS) к худшим (H) картам
+            const sortedCollection = [...userCollection].sort((a, b) => {
+                const aIndex = cardTypes.findIndex(card => card.name === a.name);
+                const bIndex = cardTypes.findIndex(card => card.name === b.name);
+                return aIndex - bIndex; // Сортировка по порядку в cardTypes (от H к SSS)
+            }).reverse(); // Разворачиваем массив, чтобы получить от SSS к H
+            
+            sortedCollection.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'collection-card';
+                cardElement.style.backgroundColor = card.color;
+                
+                // Добавляем класс мутации, если карточка мутировала
+                if (card.mutated) {
+                    cardElement.classList.add('mutated');
+                }
+                
+                cardElement.innerHTML = `
+                    ${card.mutated ? '<div class="mutated-badge">MUT</div>' : ''}
+                    <div class="card-name">${card.name}</div>
+                    <div class="card-rarity">${card.rarity}${card.mutated ? ' (Мутация)' : ''}</div>
+                    <div class="card-chance">${card.chance}</div>
+                    <div class="card-reward">${card.reward}$</div>
+                `;
+                collection.appendChild(cardElement);
+            });
+        }
+    </script>
+</body>
+</html>
