@@ -7,7 +7,20 @@
     <style>
         /* Все предыдущие стили остаются без изменений */
         /* Добавляем новые стили для группировки карт */
-        
+		
+        .account-value {
+			font-size: 24px;
+			font-weight: bold;
+			margin: 20px 0;
+			text-align: center;
+			color: #000000;
+			text-shadow: 0 0 5px rgba(0,0,0,0.5);
+			background-color: rgba(233, 233, 233, 1);
+			padding: 10px;
+			border-radius: 10px;
+			display: inline-block;
+		}
+		
         .card-group {
             position: relative;
             width: 150px;
@@ -15,17 +28,24 @@
             margin: 5px;
         }
         
-        .card-count {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 50%;
-            font-size: 14px;
-            z-index: 2;
-        }
+		.card-count {
+			position: absolute;
+			top: 0;
+			left: 0;
+			transform: translate(-25%, +35%); /* Сдвигаем элемент немного вверх и влево */
+			background-color: rgba(0, 0, 0, 0.7);
+			color: white;
+			width: 2px;          /* Фиксированная ширина */
+			height: 24px;         /* Фиксированная высота (равная ширине) */
+			border-radius: 100%;   /* Делает элемент круглым */
+			font-size: 14px;
+			z-index: 2;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 0;
+			box-sizing: border-box; /* Учитываем padding и border в общей ширине/высоте */
+		}
         
         .stacked-card {
             position: absolute;
@@ -108,6 +128,96 @@
             background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-right: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            align-self: flex-start;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .sidebar-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .card-list-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            transition: background-color 0.2s;
+        }
+        
+        .card-list-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .card-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .card-info {
+            flex-grow: 1;
+            text-align: left;
+        }
+        
+        .card-name-small {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .card-rarity-small {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .card-count {
+            font-weight: bold;
+            font-size: 14px;
+            margin-left: 10px;
+            min-width: 30px;
+            text-align: right;
+        }
+        
+        .content {
+            flex-grow: 1;
         }
         
         button {
@@ -473,10 +583,37 @@
             84% { color: violet; }
             100% { color: red; }
         }
+        
+        /* Стили для мутаций в сайдбаре */
+        .shiny-preview {
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+        
+        .golden-preview {
+            border: 2px solid gold;
+            box-shadow: 0 0 10px gold;
+        }
+        
+        .ultra-legendary-preview {
+            animation: rainbow-border-small 3s infinite linear;
+        }
+        
+        @keyframes rainbow-border-small {
+            0% { box-shadow: 0 0 5px red; border: 2px solid red; }
+            14% { box-shadow: 0 0 5px orange; border: 2px solid orange; }
+            28% { box-shadow: 0 0 5px yellow; border: 2px solid yellow; }
+            42% { box-shadow: 0 0 5px green; border: 2px solid green; }
+            56% { box-shadow: 0 0 5px blue; border: 2px solid blue; }
+            70% { box-shadow: 0 0 5px indigo; border: 2px solid indigo; }
+            84% { box-shadow: 0 0 5px violet; border: 2px solid violet; }
+            100% { box-shadow: 0 0 5px red; border: 2px solid red; }
+        }
     </style>
 </head>
 <body>
     <h1>Коллекционные карточки</h1>
+	<div class="account-value">Ценность аккаунта: <span id="accountValue">0</span></div>
     <div>
         <button id="buyPack">Купить обычный пак (1 карта)</button>
         <button id="buyBigPack">Купить большой пак (5-7 карт)</button>
@@ -493,47 +630,59 @@
         <div>Ультралегендарная: 0.1% шанс (радужная обводка)</div>
     </div>
     
-    <div id="cardModal" class="modal">
-        <div class="modal-content">
-            <div id="newCard" class="card">
-                <div class="card-front">Открываем карту...</div>
-                <div class="card-back">
-                    <div class="card-name"></div>
-                    <div class="card-rarity"></div>
-                    <div class="card-chance"></div>
-                    <div class="mutation-label"></div>
+    <div class="main-container">
+        <!-- Новая левая колонка -->
+        <div class="sidebar">
+            <div class="sidebar-title">Ваша коллекция</div>
+            <div id="sidebarCardList" class="card-list">
+                <!-- Здесь будут карточки в списке -->
+            </div>
+        </div>
+        
+        <div class="content">
+            <div id="cardModal" class="modal">
+                <div class="modal-content">
+                    <div id="newCard" class="card">
+                        <div class="card-front">Открываем карту...</div>
+                        <div class="card-back">
+                            <div class="card-name"></div>
+                            <div class="card-rarity"></div>
+                            <div class="card-chance"></div>
+                            <div class="mutation-label"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <div id="bigPackModal" class="modal">
-        <div class="big-pack-modal-content">
-            <h2 class="pack-title">Большой пак карт</h2>
-            <div id="multiCardContainer" class="multi-card-container"></div>
-            <div class="scroll-indicator">Прокрутите вниз, чтобы увидеть все карты</div>
-        </div>
-    </div>
-    
-    <h2>Ваша коллекция</h2>
-    <div class="collection-container">
-        <div id="collection" class="collection">
-            <!-- Здесь будут разделы для разных типов карт -->
-            <div class="mutation-section ultra-legendary-cards">
-                <h3>Ультралегендарные карты</h3>
-                <div id="ultraLegendaryCards" class="collection"></div>
+            
+            <div id="bigPackModal" class="modal">
+                <div class="big-pack-modal-content">
+                    <h2 class="pack-title">Большой пак карт</h2>
+                    <div id="multiCardContainer" class="multi-card-container"></div>
+                    <div class="scroll-indicator">Прокрутите вниз, чтобы увидеть все карты</div>
+                </div>
             </div>
-            <div class="mutation-section golden-cards">
-                <h3>Золотые карты</h3>
-                <div id="goldenCards" class="collection"></div>
-            </div>
-            <div class="mutation-section shiny-cards">
-                <h3>Блестящие карты</h3>
-                <div id="shinyCards" class="collection"></div>
-            </div>
-            <div class="mutation-section normal-cards">
-                <h3>Обычные карты</h3>
-                <div id="normalCards" class="collection"></div>
+            
+            <h2>Ваша коллекция</h2>
+            <div class="collection-container">
+                <div id="collection" class="collection">
+                    <!-- Здесь будут разделы для разных типов карт -->
+                    <div class="mutation-section ultra-legendary-cards">
+                        <h3>Ультралегендарные карты</h3>
+                        <div id="ultraLegendaryCards" class="collection"></div>
+                    </div>
+                    <div class="mutation-section golden-cards">
+                        <h3>Золотые карты</h3>
+                        <div id="goldenCards" class="collection"></div>
+                    </div>
+                    <div class="mutation-section shiny-cards">
+                        <h3>Блестящие карты</h3>
+                        <div id="shinyCards" class="collection"></div>
+                    </div>
+                    <div class="mutation-section normal-cards">
+                        <h3>Обычные карты</h3>
+                        <div id="normalCards" class="collection"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -578,6 +727,8 @@
         const cooldownElement = document.getElementById('cooldown');
         const rarityChancesElement = document.getElementById('rarityChances');
         const scrollIndicator = document.querySelector('.scroll-indicator');
+        const sidebarCardList = document.getElementById('sidebarCardList');
+		const accountValueElement = document.getElementById('accountValue');
         
         // Элементы для разделов коллекции
         const ultraLegendaryCardsSection = document.getElementById('ultraLegendaryCards');
@@ -598,7 +749,52 @@
         
         // Загрузка коллекции при старте
         updateCollection();
+		updateAccountValue();
         
+		// Функция для расчета ценности аккаунта
+		function calculateAccountValue() {
+			let totalValue = 0;
+    
+			// Создаем объект с ценностями для каждой редкости
+			const rarityValues = {
+				'H': 0.1,
+				'F': 1,
+				'E': 5,
+				'D': 15,
+				'C': 50,
+				'B': 150,
+				'A': 400,
+				'A+': 600,
+				'S+': 1000,
+				'S++': 1500,
+				'S+++': 2000,
+				'SS': 2500,
+				'SS+': 3000,
+				'SSS': 3333
+			};
+    
+			// Рассчитываем общую ценность
+			userCollection.forEach(card => {
+				const cardValue = rarityValues[card.name] || 0;
+				let multiplier = 1;
+				
+				// Учитываем мутации
+				if (card.mutation === "shiny") multiplier = 1.5;
+				else if (card.mutation === "golden") multiplier = 3;
+				else if (card.mutation === "ultra-legendary") multiplier = 10;
+				
+				totalValue += cardValue * multiplier;
+			});
+			
+			return Math.round(totalValue * 10) / 10; // Округляем до 1 знака после запятой
+		}
+		
+		// Обновляем отображение ценности аккаунта
+		function updateAccountValue() {
+			const value = calculateAccountValue();
+			accountValueElement.textContent = value;
+		}
+		
         // Функция для получения случайной карты
         function getRandomCard() {
             const randomValue = Math.random() * totalWeight;
@@ -699,6 +895,7 @@
                     setTimeout(() => {
                         userCollection.push(card);
                         saveCollection();
+						updateAccountValue();
                         updateCollection();
                         
                         // Прокручиваем к последней добавленной карте
@@ -767,6 +964,7 @@
             // Добавляем все карты в коллекцию
             userCollection.push(...cards);
             saveCollection();
+			updateAccountValue();
             
             // Обновляем коллекцию и прокручиваем к новым картам
             setTimeout(() => {
@@ -811,6 +1009,7 @@
             if (confirm("Вы уверены, что хотите сбросить всю коллекцию?")) {
                 userCollection = [];
                 saveCollection();
+				updateAccountValue();
                 updateCollection();
             }
         });
@@ -857,6 +1056,7 @@
             goldenCardsSection.innerHTML = '';
             shinyCardsSection.innerHTML = '';
             normalCardsSection.innerHTML = '';
+            sidebarCardList.innerHTML = '';
             
             // Группируем карты по типу и мутации
             const groupedCards = {};
@@ -879,24 +1079,70 @@
                 return bIndex - aIndex; // Сортировка от SSS к H
             });
             
-            // Добавляем карты в соответствующие разделы
+            // Добавляем карты в сайдбар
             sortedGroups.forEach(group => {
                 const card = group.card;
                 const count = group.count;
                 
-                // Создаем группу карт (стопку)
+                // Создаем элемент для сайдбара
+                const listItem = document.createElement('div');
+                listItem.className = 'card-list-item';
+                
+                // Создаем превью карты
+                const preview = document.createElement('div');
+                preview.className = 'card-preview';
+                preview.style.backgroundColor = card.color
+                // Применяем стили мутации для превью
+                if (card.mutation === "shiny") {
+                    preview.classList.add('shiny-preview');
+                } else if (card.mutation === "golden") {
+                    preview.classList.add('golden-preview');
+                } else if (card.mutation === "ultra-legendary") {
+                    preview.classList.add('ultra-legendary-preview');
+                }
+                
+                preview.textContent = card.name;
+                
+                // Создаем блок с информацией о карте
+                const info = document.createElement('div');
+                info.className = 'card-info';
+                
+                const name = document.createElement('div');
+                name.className = 'card-name-small';
+                name.textContent = card.rarity;
+                
+                const rarity = document.createElement('div');
+                rarity.className = 'card-rarity-small';
+                rarity.textContent = card.name;
+                
+                info.appendChild(name);
+                info.appendChild(rarity);
+                
+                // Создаем счетчик карт
+                const counter = document.createElement('div');
+                counter.className = 'card-count';
+                counter.textContent = count;
+                
+                // Собираем элемент списка
+                listItem.appendChild(preview);
+                listItem.appendChild(info);
+                listItem.appendChild(counter);
+                
+                // Добавляем в сайдбар
+                sidebarCardList.appendChild(listItem);
+                
+                // Добавляем карты в соответствующие разделы коллекции
                 const cardGroup = document.createElement('div');
                 cardGroup.className = 'card-group';
                 
-                // Добавляем счетчик карт
-                const countElement = document.createElement('div');
-                countElement.className = 'card-count';
-                countElement.textContent = count;
-                cardGroup.appendChild(countElement);
+                const countBadge = document.createElement('div');
+                countBadge.className = 'card-count';
+                countBadge.textContent = count;
+                cardGroup.appendChild(countBadge);
                 
-                // Создаем от 1 до 3 карт в стопке (для визуального эффекта)
-                const cardsToShow = Math.min(count, 3);
-                for (let i = 0; i < cardsToShow; i++) {
+                // Создаем 1-3 карты для визуального отображения в стопке
+                const displayCount = Math.min(count, 3);
+                for (let i = 0; i < displayCount; i++) {
                     const cardElement = document.createElement('div');
                     cardElement.className = `stacked-card pos-${i}`;
                     cardElement.style.backgroundColor = card.color;
@@ -904,37 +1150,21 @@
                         <div class="card-name">${card.name}</div>
                         <div class="card-rarity">${card.rarity}</div>
                         <div class="card-chance">${card.chance}</div>
-                        ${card.mutation ? `<div class="mutation-label ${card.mutation}-label">${
-                            card.mutation === "shiny" ? "Блестящая" : 
-                            card.mutation === "golden" ? "Золотая" : 
-                            "Ультралегендарная"
-                        }</div>` : ''}
                     `;
                     
                     // Применяем стили мутации
-                    if (card.mutation) {
-                        if (card.mutation === "shiny") {
-                            cardElement.classList.add('shiny');
-                            if (cardElement.querySelector('.mutation-label')) {
-                                cardElement.querySelector('.mutation-label').classList.add('shiny-label');
-                            }
-                        } else if (card.mutation === "golden") {
-                            cardElement.classList.add('golden');
-                            if (cardElement.querySelector('.mutation-label')) {
-                                cardElement.querySelector('.mutation-label').classList.add('golden-label');
-                            }
-                        } else if (card.mutation === "ultra-legendary") {
-                            cardElement.classList.add('ultra-legendary');
-                            if (cardElement.querySelector('.mutation-label')) {
-                                cardElement.querySelector('.mutation-label').classList.add('ultra-legendary-label');
-                            }
-                        }
+                    if (card.mutation === "shiny") {
+                        cardElement.classList.add('shiny');
+                    } else if (card.mutation === "golden") {
+                        cardElement.classList.add('golden');
+                    } else if (card.mutation === "ultra-legendary") {
+                        cardElement.classList.add('ultra-legendary');
                     }
                     
                     cardGroup.appendChild(cardElement);
                 }
                 
-                // Добавляем группу в соответствующий раздел
+                // Добавляем группу карт в соответствующий раздел коллекции
                 if (card.mutation === "ultra-legendary") {
                     ultraLegendaryCardsSection.appendChild(cardGroup);
                 } else if (card.mutation === "golden") {
@@ -945,42 +1175,7 @@
                     normalCardsSection.appendChild(cardGroup);
                 }
             });
-            
-            // Скрываем пустые разделы
-            document.querySelectorAll('.mutation-section').forEach(section => {
-                const cardsContainer = section.querySelector('.collection');
-                if (cardsContainer.children.length === 0) {
-                    section.style.display = 'none';
-                } else {
-                    section.style.display = 'block';
-                }
-            });
         }
-        
-        // Автоматическая прокрутка для большого пака
-        let isScrolling = false;
-        multiCardContainer.addEventListener('scroll', function() {
-            if (!isScrolling) {
-                scrollIndicator.style.opacity = '0';
-            }
-        });
-        
-        // Показываем индикатор прокрутки через 3 секунды, если пользователь не прокрутил
-        bigPackModal.addEventListener('click', function() {
-            setTimeout(() => {
-                const container = multiCardContainer;
-                if (container.scrollHeight > container.clientHeight && 
-                    container.scrollTop + container.clientHeight < container.scrollHeight - 50) {
-                    scrollIndicator.style.opacity = '1';
-                    isScrolling = true;
-                    
-                    setTimeout(() => {
-                        scrollIndicator.style.opacity = '0';
-                        isScrolling = false;
-                    }, 3000);
-                }
-            }, 3000);
-        });
     </script>
 </body>
 </html>
